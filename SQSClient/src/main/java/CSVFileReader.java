@@ -17,17 +17,17 @@ import org.apache.commons.csv.CSVRecord;
  */
 public class CSVFileReader {
 
-	private static final String[] FILE_HEADERS = {"id","name","abbreviation","country"};
-	private static final String STATE_ID ="id";
-	private static final String STATE_NAME="name";
-	private static final String STATE_ABBR="abbreviation";
-	private static final String COUNTRY="country";
+	private static final String[] FILE_HEADERS = {"X_EIDM_GUID","AGREE_NUM","ECA_ACCOUNT_CSN","CUSTOMER_ACCOUNT_NAME__C"};
+	private static final String GUID ="X_EIDM_GUID";
+	private static final String AGREE_NUMBER="AGREE_NUM";
+	private static final String ACCOUNT_CSN="ECA_ACCOUNT_CSN";
+	private static final String CUSTOMER_ACCOUNT_NAME="CUSTOMER_ACCOUNT_NAME__C";
 	
 	
-	public static List<QueueMessage> readCsvFile(String fileName){
+	public static List<GuidMessage> readCsvFile(String fileName){
 		FileReader reader = null;
 		CSVParser csvFileParser = null;
-		List<QueueMessage> mssgs = new ArrayList<QueueMessage>();
+		List<GuidMessage> mssgs = new ArrayList<GuidMessage>();
 		CSVFormat csvFormat = CSVFormat.DEFAULT.withHeader(FILE_HEADERS);
 		try{
 			
@@ -37,17 +37,17 @@ public class CSVFileReader {
 			System.out.println("The size of csvRecords is "+csvRecords.size());
 			for(int i=1;i< csvRecords.size();i++){
 				CSVRecord record = (CSVRecord) csvRecords.get(i);
-				QueueMessage mssg = new QueueMessage();
-				mssg.setId(Integer.parseInt(record.get(STATE_ID)));
+				GuidMessage mssg = new GuidMessage();
+				mssg.setGuid(record.get(GUID));
 				//System.out.println(record.getId());
-				mssg.setName(record.get(STATE_NAME));
-				mssg.setCountry(record.get(COUNTRY));
-				mssg.setAbbreviation(record.get(STATE_ABBR));
+				mssg.setAggrementNumber(record.get(AGREE_NUMBER));
+				mssg.setAccountCsn(record.get(ACCOUNT_CSN));
+				mssg.setCustomerAccName(record.get(CUSTOMER_ACCOUNT_NAME));
 				mssgs.add(mssg);
 			}
 			
 			System.out.println("the size of the list is "+mssgs.size());
-			for(QueueMessage mssg:mssgs){
+			for(GuidMessage mssg:mssgs){
 				
 				System.out.println(mssg.toString());
 			}
@@ -66,7 +66,7 @@ public class CSVFileReader {
 	}
 	
 	public static void main(String args[]){
-		String fileName= "/Users/Joker/state_table.csv";
+		String fileName= "/Users/Joker/GUIDData.csv";
 		//File file = new File("state_table.csv");
 		//System.out.println(System.getProperty("user.home"));
 		
