@@ -2,11 +2,10 @@
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.ArrayList;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.CountDownLatch;
+
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -15,7 +14,6 @@ import com.amazonaws.AmazonClientException;
 import com.amazonaws.AmazonServiceException;
 import com.amazonaws.auth.AWSCredentials;
 import com.amazonaws.auth.profile.ProfileCredentialsProvider;
-import com.amazonaws.metrics.RequestMetricCollector;
 import com.amazonaws.regions.Region;
 import com.amazonaws.regions.Regions;
 import com.amazonaws.services.simpledb.model.GetAttributesResult;
@@ -44,11 +42,13 @@ public class SQSClient {
 	private AWSCredentials credentials;
 	private AmazonSQS sqsClient;
 	private final String QueueUrl="https://sqs.us-west-2.amazonaws.com/671732872341/MyTestingQueue";
-	private final String FILE_NAME="/Users/Joker/state_table.csv";
-	public static CountDownLatch latch = new CountDownLatch(1);
+	private final String FILE_NAME="/Users/Joker/GUIDData.csv";
+	private List<Message> mssgList;
+    volatile int numOfAvailMessages = 1000;
 	
 	public SQSClient(){
 	System.out.println("HEllo world");
+		mssgList = new ArrayList<Message>();
 	numberOfMessagesConsumed.set(0);
 	
 	
@@ -86,42 +86,69 @@ public class SQSClient {
 		}
 	}
 	
-	private List<QueueMessage> fetchMessages(){
+	private List<GuidMessage> fetchMessages(){
 		return CSVFileReader.readCsvFile(FILE_NAME);
 	}
 	public void sendMessageToQueue(){
 		 
-		List<QueueMessage> qmssgs = fetchMessages();
+		List<GuidMessage> qmssgs = fetchMessages();
 		//TODO this needs to be multithreaded 
-		for(QueueMessage qm: qmssgs){
+		for(GuidMessage qm: qmssgs){
 			String qmString = qm.toString();
 			sqsClient.sendMessage(new SendMessageRequest(QueueUrl,qmString));
 		}
 	}
 	
-	public void getQueueAttributes(){
+	/*public void getQueueAttributes(){
 
-		GetQueueAttributesResult res = sqsClient.getQueueAttributes(new GetQueueAttributesRequest());
-		Map<String, String> hasAtt = res.getAttributes();
-		Iterator<Entry<String, String>> it = hasAtt.entrySet().iterator();
+		//GetQueueAttributesResult res = sqsClient.getQueueAttributes(new GetQueueAttributesRequest());
+		//Map<String, String> hasAtt = res.getAttributes();
+		//Iterator<Entry<String, String>> it = hasAtt.entrySet().iterator();
 		while(it.hasNext()){
 			Map.Entry<String,String> k = (Map.Entry<String, String>)it.next();
 			System.out.println("The Key is: "+k.getKey());
 			System.out.println("The value is: "+k.getValue());
 		}
-	}
+	}*/
 	
 	public void receiveMessage(){
 		ExecutorService service = Executors.newFixedThreadPool(10);
-		
-		
-		for(int i=0;i <10;i++){
+		List<String> strArr = new ArrayList<String>();
+		strArr.add("ApproximateNumberOfMessagesNotVisible");
+		strArr.add("ApproximateNumberOfMessages");
+		GetQueueAttributesRequest greq = new GetQueueAttributesRequest(QueueUrl).withAttributeNames(strArr);
+		GetQueueAttributesResult res = sqsClient.getQueueAttributes(QueueUrl,strArr);
+		Map<String,String> attrs = res.getAttributes();
+		System.out.println(attrs.toString());
+
+		//Integer nums = Integer.parseInt(attrs.get(1));
+		//System.out.println(nums);
+		ReceiveMessageRequest req = new ReceiveMessageRequest(QueueUrl);
+        //sets to number of messages in the queue
+		System.out.println("Number of available messages"+numOfAvailMessages);
 		service.execute(new Runnable(){
 			public void run(){
-				try{
-					List<Message> messages = sqsClient.receiveMessage(new ReceiveMessageRequest(QueueUrl)).getMessages();
-					System.out.println(messages.get(0).getBody());
-					numberOfMessagesConsumed.getAndIncrement();
+				ReceiveMessageRequest req = new ReceiveMessageRequest(QueueUrl);
+
+
+
+				req.setVisibilityTimeout(10);//set the visibility of messages received to 10 secs
+				                             //del thread should del the message within 10 secs
+				req.setMaxNumberOfMessages(10);
+                while(numOfAvailMessages != 0)
+                try{
+					List<Message> messages = sqsClient.receiveMessage(req).getMessages();
+					int size = messages.size();
+                    System.out.println("the size of messages is "+size);
+					synchronized(this) {
+                        numOfAvailMessages -= size;
+                    }
+					//System.out.println(messages.get(0).getBody());
+					//synchronized (mssgList){
+					//	mssgList.add();
+					//}
+					numberOfMessagesConsumed.addAndGet(size);
+
 				}catch(AmazonServiceException ase){
 					System.out.println("Caught an AmazonServiceException, which means your request made it " +
 		                    "to Amazon SQS, but was rejected with an error response for some reason.");
@@ -138,8 +165,9 @@ public class SQSClient {
 				}
 			}
 		});
-		}
+
 		service.shutdown();
+
 		
 	}
 	
@@ -147,15 +175,16 @@ public class SQSClient {
 		SQSClient sqsClient = new SQSClient();
 		sqsClient.initClient();
 		sqsClient.getAwsCredentials();
-		sqsClient.getQueueAttributes();
+		//sqsClient.getQueueAttributes();
 		//sqsClient.sendMessageToQueue();
-		//sqsClient.receiveMessage();
+		sqsClient.receiveMessage();
 		try{
-			Thread.sleep(1000);
+			Thread.sleep(15000);
 		}catch(InterruptedException e){
 			e.printStackTrace();
 		}
-		System.out.println("Number of messages consumed "+numberOfMessagesConsumed);
+       // System.out.println(numberOfMessagesConsumed);
+        System.out.println("Number of messages consumed "+numberOfMessagesConsumed);
 		//sqsClient.listAllQueues();
 	}
 	
