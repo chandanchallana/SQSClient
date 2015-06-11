@@ -44,10 +44,10 @@ public class GuidMessage {
     }
 
     public String toString(){
-        return "{\"Guid\": "+guid+","
+        return "{\"guid\": "+guid+","
                  +" \"AggreementNumber\": "+aggrementNumber+ ","
-                 +" \"AccountCSN\": "+accountCsn+ ","
-                 +" \"customerAccountName\": "+customerAccName
+                 +" \"accountCsn\": "+accountCsn+ ","
+                 +" \"customerAccName\": "+customerAccName
                  + " }";
     }
 }
