@@ -13,8 +13,9 @@ public class GuidMessage {
     }
 
     public void setGuid(String guid) {
-        this.guid = guid;
-        this.guid = this.guid.replace(".","");
+        this.guid = "\""+guid+ "\"";
+
+        //this.guid = this.guid.replace(".","");
     }
 
     public String getAggrementNumber() {
@@ -22,8 +23,8 @@ public class GuidMessage {
     }
 
     public void setAggrementNumber(String aggrementNumber) {
-        this.aggrementNumber = aggrementNumber;
-        this.aggrementNumber = this.aggrementNumber.replace(".","");
+        this.aggrementNumber = "\""+aggrementNumber+ "\"";
+
     }
 
     public String getAccountCsn() {
@@ -31,7 +32,7 @@ public class GuidMessage {
     }
 
     public void setAccountCsn(String accountCsn) {
-        this.accountCsn = accountCsn;
+        this.accountCsn = "\""+accountCsn+ "\"";
     }
 
     public String getCustomerAccName() {
@@ -39,14 +40,14 @@ public class GuidMessage {
     }
 
     public void setCustomerAccName(String customerAccName) {
-        this.customerAccName = customerAccName;
+        this.customerAccName = "\""+customerAccName+ "\"";
     }
 
     public String toString(){
-        return "{Guid: "+guid+","
-                 +" AggreementNumber: "+aggrementNumber+ ","
-                 +" AccountCSN: "+accountCsn+ ","
-                 +" customerAccountName: "+customerAccName
+        return "{\"Guid\": "+guid+","
+                 +" \"AggreementNumber\": "+aggrementNumber+ ","
+                 +" \"AccountCSN\": "+accountCsn+ ","
+                 +" \"customerAccountName\": "+customerAccName
                  + " }";
     }
 }
