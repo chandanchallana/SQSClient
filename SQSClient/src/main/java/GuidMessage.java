@@ -1,10 +1,12 @@
 /**
  * Created by Joker on 6/10/15.
  */
+
+
 public class GuidMessage {
 
     private String guid;
-    private String aggrementNumber;
+    private String aggreementNumber;
     private String accountCsn;
     private String customerAccName;
 
@@ -13,17 +15,17 @@ public class GuidMessage {
     }
 
     public void setGuid(String guid) {
-        this.guid = "\""+guid+ "\"";
+        this.guid = guid ;
 
         //this.guid = this.guid.replace(".","");
     }
 
-    public String getAggrementNumber() {
-        return aggrementNumber;
+    public String getAggreementNumber() {
+        return aggreementNumber;
     }
 
-    public void setAggrementNumber(String aggrementNumber) {
-        this.aggrementNumber = "\""+aggrementNumber+ "\"";
+    public void setAggreementNumber(String aggreementNumber) {
+        this.aggreementNumber = aggreementNumber;
 
     }
 
@@ -32,7 +34,7 @@ public class GuidMessage {
     }
 
     public void setAccountCsn(String accountCsn) {
-        this.accountCsn = "\""+accountCsn+ "\"";
+        this.accountCsn = accountCsn;
     }
 
     public String getCustomerAccName() {
@@ -40,14 +42,14 @@ public class GuidMessage {
     }
 
     public void setCustomerAccName(String customerAccName) {
-        this.customerAccName = "\""+customerAccName+ "\"";
+        this.customerAccName = customerAccName;
     }
 
     public String toString(){
-        return "{\"guid\": "+guid+","
-                 +" \"AggreementNumber\": "+aggrementNumber+ ","
-                 +" \"accountCsn\": "+accountCsn+ ","
-                 +" \"customerAccName\": "+customerAccName
-                 + " }";
+        return "[guid: "+getGuid()+","
+                 +"aggreementNumber: "+getAggreementNumber()+ ","
+                 +"accountCsn: "+getAccountCsn()+ ","
+                 +"customerAccName: "+getCustomerAccName()
+                 + "]";
     }
 }
