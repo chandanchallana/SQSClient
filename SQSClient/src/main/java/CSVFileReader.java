@@ -9,6 +9,10 @@ import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
 
+import org.codehaus.jackson.JsonGenerationException;
+import org.codehaus.jackson.map.JsonMappingException;
+import org.codehaus.jackson.map.ObjectMapper;
+
 
 
 /**
@@ -22,15 +26,16 @@ public class CSVFileReader {
 	private static final String AGREE_NUMBER="AGREE_NUM";
 	private static final String ACCOUNT_CSN="ECA_ACCOUNT_CSN";
 	private static final String CUSTOMER_ACCOUNT_NAME="CUSTOMER_ACCOUNT_NAME__C";
-	
-	
-	public static List<GuidMessage> readCsvFile(String fileName){
+
+
+	public static List<String> readCsvFile(String fileName){
 		FileReader reader = null;
 		CSVParser csvFileParser = null;
-		List<GuidMessage> mssgs = new ArrayList<GuidMessage>();
+		List<String> SqsMessages = new ArrayList<String>();
 		CSVFormat csvFormat = CSVFormat.DEFAULT.withHeader(FILE_HEADERS);
+		ObjectMapper mapper = new ObjectMapper();
 		try{
-			
+
 			reader = new FileReader(fileName);
 			csvFileParser = new CSVParser(reader,csvFormat);
 			List csvRecords = csvFileParser.getRecords();
@@ -39,17 +44,23 @@ public class CSVFileReader {
 				CSVRecord record = (CSVRecord) csvRecords.get(i);
 				GuidMessage mssg = new GuidMessage();
 				mssg.setGuid(record.get(GUID));
-				//System.out.println(record.getId());
-				mssg.setAggrementNumber(record.get(AGREE_NUMBER));
+				mssg.setAggreementNumber(record.get(AGREE_NUMBER));
 				mssg.setAccountCsn(record.get(ACCOUNT_CSN));
 				mssg.setCustomerAccName(record.get(CUSTOMER_ACCOUNT_NAME));
-				mssgs.add(mssg);
+				try{
+					String str = mapper.writeValueAsString(mssg);
+					SqsMessages.add(str);
+
+				}catch(Exception e){
+					e.printStackTrace();
+				}
+
 			}
-			
-			System.out.println("the size of the list is "+mssgs.size());
-			for(GuidMessage mssg:mssgs){
-				
-				System.out.println(mssg.toString());
+
+			System.out.println("the size of the list is "+SqsMessages.size());
+			for(String mssg:SqsMessages){
+
+				System.out.println(mssg);
 			}
 		}catch(Exception e){
 			System.out.println(e.getMessage());
@@ -60,16 +71,16 @@ public class CSVFileReader {
 			}catch(IOException e){
 				e.printStackTrace();
 			}
-			
+
 		}
-		return mssgs;
+		return SqsMessages;
 	}
-	
+
 	public static void main(String args[]){
-		String fileName= "/Users/Joker/GUIDData.csv";
+		String fileName= "/Users/Joker/guids.csv";
 		//File file = new File("state_table.csv");
 		//System.out.println(System.getProperty("user.home"));
-		
+
 		CSVFileReader.readCsvFile(fileName);
 	}
 }
